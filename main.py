@@ -1,23 +1,28 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-#====
-def packet_decode(packets):
+# ====function setup====
+def packet_decode(packets): # Decoding packets
+    # Create data lists and datapoint indices for data storage
     small_packet_data = []
     big_packet_data = []
     i = 0
+    # Iterate through every byte entry in the txt file
     for byte in packets:
-        if i == len(packets) - 1:
+        if i == len(packets) - 1: # Exit iteration after reaching last byte
             break
-        if byte == 'AA':
-            if packets[i + 1] == 'AA':
-                if file_contents[i + 2] == '04':
+        if byte == 'AA': # Packet starting byte
+            if packets[i + 1] == 'AA': # Confirm following byte
+                if file_contents[i + 2] == '04': # Small packet
+                    # Data storage and conversion from base 16 to base 10
                     xxHigh, xxLow, xxCheckSum = int(packets[i + 5], 16), int(packets[i + 6], 16), int(packets[i + 7], 16)
+                    # Calculation for rawdata and storage
                     rawdata = (xxHigh << 8) | xxLow
                     if (rawdata > 32768):
                         rawdata -= 65536
                     small_packet_data.append(rawdata)
-                elif file_contents[i + 2] == '20':
+                elif file_contents[i + 2] == '20': # Big packet
+                    # Data storage and conversion from base 16 to base 10
                     Delta = int((packets[i+7] + packets[i+8] + packets[i+9]), 16)
                     Theta = int((packets[i+10] + packets[i+11] + packets[i+12]), 16)
                     LowAlpha = int((packets[i+13] + packets[i+14] + packets[i+15]), 16)
@@ -30,11 +35,11 @@ def packet_decode(packets):
                     Meditation = int(packets[i+34], 16)
                     big_packet = {'Delta': Delta, 'Theta': Theta, 'LowAlpha': LowAlpha, 'HighAlpha': HighAlpha, 'LowBeta': LowBeta, 'HighBeta': HighBeta, 'LowGamma': LowGamma, 'MiddleGamma': MiddleGamma, 'Attention': Attention, 'Meditation': Meditation}
                     big_packet_data.append(big_packet)
-        i += 1
-    return small_packet_data, big_packet_data
+        i += 1 # Move to next byte
+    return small_packet_data, big_packet_data #return final values
 
 
-def graphing(small_packet_data, big_packet_data):
+def graphing(small_packet_data, big_packet_data): # Plotting
     # Calculate x-axis indices for small packet data
     small_packet_indices = np.arange(len(small_packet_data))
 
@@ -79,8 +84,8 @@ def graphing(small_packet_data, big_packet_data):
     ax2.legend(loc='upper right')
 
     # Plot the attention and meditation values as a line plot on the third subplot
-    ax3.plot(big_packet_indices, attention_values, color='blue', label='Attention')
-    ax3.plot(big_packet_indices, meditation_values, color='green', label='Meditation')
+    ax3.fill_between(big_packet_indices, attention_values, label='Attention', alpha=0.5, color='blue')
+    ax3.fill_between(big_packet_indices, meditation_values, label='Meditation', alpha=0.5, color='green')
     ax3.set_ylabel('Attention / Meditation')
     ax3.set_xlabel('Time (packets)')
     ax3.set_title('Attention and Meditation')
@@ -93,6 +98,8 @@ def graphing(small_packet_data, big_packet_data):
     # Display the plot
     plt.show()
 
+# ====main====
+# File read and data storage+setup
 f = open('session.txt', 'r')
 file_contents = f.readlines()[0]
 file_contents = file_contents.strip(' ').split(' ')
@@ -100,12 +107,14 @@ Byte_cnt = len(file_contents)
 Byte_cnt = (Byte_cnt // 8)*8
 file_contents = file_contents[:Byte_cnt]
 
+# Decode packets and storage of corresponding data lists
 decoded_packets = packet_decode(file_contents)
-
 small_packets = decoded_packets[0]
 big_packets = decoded_packets[1]
 
+# Print in terminal for data read and decode confirmation
 print(small_packets)
 print(big_packets)
 
+# Graphing packet data
 graphing(small_packets, big_packets)
